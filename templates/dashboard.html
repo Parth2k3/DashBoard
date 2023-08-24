@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DASHBOARD</title>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+  <style>
+    circle{
+      opacity:0.5;
+    
+    };
+    .contianer{
+      border:  5px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  
+  <ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active" aria-current="page" href="#">DASHBOARD</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="#">Contact</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="#">Help</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link disabled" aria-disabled="true">{{username}}</a>
+  </li>
+</ul>
+
+  <div class="vstack gap-3 container">
+
+  
+  <div class="p-2">
+  <h2>INTENSITIES</h2>
+    <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+  <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" onclick="showChart('topic')">
+  <label class="btn btn-outline-primary" for="btnradio1">TOPIC</label>
+
+  <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" onclick="showChart('pestle')">
+  <label class="btn btn-outline-primary" for="btnradio2">PESTLE</label>
+
+  <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" onclick="showChart('sector')">
+  <label class="btn btn-outline-primary" for="btnradio3">SECTOR</label>
+</div>
+    <div id="chart-container"></div>
+  </div>
+
+    
+  <div class="p-2">
+    <h2>START YEAR vs PESTLES' FREQUENCY</h2>
+    <select id="buttonDropdown" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <option value="" disabled selected>Select a Filter</option>
+        <option value="Organization">Organization</option>
+        <option value="Political">Political</option>
+        <option value="Environmental">Environmental</option>
+        <option value="Healthcare">Healthcare</option>
+        <option value="Lifestyles">Lifestyles</option>
+        <option value="Technological">Technological</option>
+        <option value="Economic">Economic</option>
+        <option value="Industries">Industries</option>
+        <option value="Social">Social</option>
+    </select>
+
+    <button id="selectedButton" type="button" class="btn btn-outline-secondary" disabled>Selected Filter</button>
+  <div id="chart-container-2"></div>
+  </div>
+
+  
+  
+    
+    
+  <div class="p-2">
+    <h2>RELEVANCES</h2>
+    <div class="btn-group" role="group" aria-label="Basic outlined example">
+  <button type="button" onclick="showRelChart('topic')" class="btn btn-outline-primary">TOPIC</button>
+  <button type="button" onclick="showRelChart('pestle')" class="btn btn-outline-primary">PESTLE</button>
+  <button type="button" onclick="showRelChart('sector')" class="btn btn-outline-primary">SECTOR</button>
+</div>
+    <div id="chart-container-3"></div>
+
+  </div>
+    
+  <div class="p-2">
+    <h2>SECTORS</h2>
+    <select id="buttonDropdown2" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <option value="" disabled selected>Select a Filter</option>
+        <option value="Government">Government</option>
+        <option value="Transport">Transport</option>
+        <option value="Security">Security</option>
+        <option value="Energy">Energy</option>
+        <option value="Retail">Retail</option>
+    </select>
+        <button id="selectedButton2" disabled>Selected Filter</button>
+  <div id="chart-container-4"></div>  
+
+  </div>
+    <h2>FREQUENCY OF SECTORS vs COUNTRIES</h2>
+    <div class="p-2"><button type="button" class="btn btn-outline-secondary" onclick="hierarchial()">SECTORS vs COUNTRY</button></div>
+    <div id="chart-container-5"></div>
+  </div>
+  
+    
+  
+</body>
+<script>
+
+  var int_sec_data = {{int_sec|tojson}};
+  var int_top_data = {{int_top|tojson}};
+  var int_pes_data = {{int_pes|tojson}};
+  var rel_sec_data = {{rel_sec|tojson}};
+  var rel_top_data = {{rel_top|tojson}};
+  var rel_pes_data = {{rel_pes|tojson}};
+  var Organization = {{Organization|tojson}};
+  var Political = {{Political|tojson}};
+  var Environmental = {{Environmental|tojson}};
+  var Health = {{Health|tojson}};
+  var Technological = {{Technological|tojson}};
+  var Lifestyles = {{Lifestyles|tojson}};
+  var Economic = {{Economic|tojson}};
+  var Industries = {{Industries|tojson}};
+  var Social = {{Social|tojson}};
+  var gov_freq = {{gov_freq|tojson}};
+  var tra_freq = {{tra_freq|tojson}};
+  var sec_freq = {{sec_freq|tojson}};
+  var ene_freq = {{ene_freq|tojson}};
+  var ret_freq = {{ret_freq|tojson}};
+
+  const pie_data = {};
+  pie_data["Government"] = gov_freq;
+  pie_data["Transport"] = tra_freq;
+  pie_data["Security"] = sec_freq;
+  pie_data["Energy"] = ene_freq;
+  pie_data["Retail"] = ret_freq;
+
+  const linear_data = {};
+  linear_data["Organization"] = Organization;
+  linear_data["Political"] = Political;
+  linear_data["Environmental"] = Environmental;
+  linear_data["Health"] = Health;
+  linear_data["Technological"] = Technological;
+  linear_data["Lifestyles"] = Lifestyles;
+  linear_data["Economic"] = Economic;
+  linear_data["Industries"] = Industries;
+  linear_data["Social"] = Social;
+
+  var triple_data = {{triple_data|tojson}};
+
+const width = 928;
+  const height = 500;
+  const svgWidth = 928;
+  const svgHeight = 500;
+const svg1 = d3.select("#chart-container")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: fill;");
+  
+function int_sec_bar(){
+  const width = 928;
+  const height = 500;
+  const marginTop = 40;
+  const marginRight = 30;
+  const marginBottom = 90;
+  const marginLeft = 50;
+
+  // Declare the x (horizontal position) scale.
+  const svg = d3.select("#chart-container")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: fill;");
+
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(int_sec_data, ([d]) => -d.intensity, (d) => d.sector)) // descending intensity
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+  
+  // Declare the y (vertical position) scale.
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(int_sec_data, (d) => d.intensity)])
+      .range([height - marginBottom, marginTop]);
+
+  // Create the SVG container.
+
+  // Add a rect for each bar.
+  svg.append("g")
+      .attr("fill", "steelblue")
+    .selectAll()
+    .data(int_sec_data)
+    .join("rect")
+      .attr("x", (d) => x(d.sector))
+      .attr("y", (d) => y(d.intensity))
+      .attr("height", (d) => y(0) - y(d.intensity))
+      .attr("width", x.bandwidth());
+
+  // Add the x-axis and label.
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+  svg.selectAll(".tick text")
+  .style("text-anchor", "end") // Set the text-anchor property
+  .attr("transform", "rotate(-90)") // Rotate the tick labels
+  .attr("dx", "-0.8em") // Adjust the position of the tick labels
+  .attr("dy", "0.15em"); 
+
+  // Add the y-axis and label, and remove the domain line.
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).tickFormat((y) => (y).toFixed()))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ INTENSITY"));
+  }
+
+function int_top_bar(){
+  
+  const width = 928;
+  const height = 500;
+  const marginTop = 40;
+  const marginRight = 30;
+  const marginBottom = 90;
+  const marginLeft = 50;
+
+  // Declare the x (horizontal position) scale.
+  const svg = d3.select("#chart-container")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: fill;");
+
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(int_top_data, ([d]) => -d.intensity, (d) => d.topic)) // descending intensity
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+  
+  // Declare the y (vertical position) scale.
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(int_top_data, (d) => d.intensity)])
+      .range([height - marginBottom, marginTop]);
+
+  // Create the SVG container.
+
+  // Add a rect for each bar.
+  svg.append("g")
+      .attr("fill", "steelblue")
+    .selectAll()
+    .data(int_top_data)
+    .join("rect")
+      .attr("x", (d) => x(d.topic))
+      .attr("y", (d) => y(d.intensity))
+      .attr("height", (d) => y(0) - y(d.intensity))
+      .attr("width", x.bandwidth());
+
+  // Add the x-axis and label.
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+  svg.selectAll(".tick text")
+  .style("text-anchor", "end") // Set the text-anchor property
+  .attr("transform", "rotate(-90)") // Rotate the tick labels
+  .attr("dx", "-0.8em") // Adjust the position of the tick labels
+  .attr("dy", "0.15em");       
+
+  // Add the y-axis and label, and remove the domain line.
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).tickFormat((y) => (y).toFixed()))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ INTENSITY"));
+  }
+
+function int_pes_bar(){
+    
+  const width = 928;
+  const height = 500;
+  const marginTop = 40;
+  const marginRight = 30;
+  const marginBottom = 90;
+  const marginLeft = 50;
+
+  // Declare the x (horizontal position) scale.
+  const svg = d3.select("#chart-container")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: fill;");
+
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(int_pes_data, ([d]) => -d.intensity, (d) => d.pestle)) // descending intensity
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+  
+  // Declare the y (vertical position) scale.
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(int_pes_data, (d) => d.intensity)])
+      .range([height - marginBottom, marginTop]);
+
+  // Create the SVG container.
+
+  // Add a rect for each bar.
+  svg.append("g")
+      .attr("fill", "steelblue")
+    .selectAll()
+    .data(int_pes_data)
+    .join("rect")
+      .attr("x", (d) => x(d.pestle))
+      .attr("y", (d) => y(d.intensity))
+      .attr("height", (d) => y(0) - y(d.intensity))
+      .attr("width", x.bandwidth());
+
+  // Add the x-axis and label.
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+  svg.selectAll(".tick text")
+  .style("text-anchor", "end") // Set the text-anchor property
+  .attr("transform", "rotate(-90)") // Rotate the tick labels
+  .attr("dx", "-0.8em") // Adjust the position of the tick labels
+  .attr("dy", "0.15em");       
+
+  // Add the y-axis and label, and remove the domain line.
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).tickFormat((y) => (y).toFixed()))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ INTENSITY"));
+  }
+
+
+
+
+  
+function showChart(chartType) {
+
+  if (chartType == "sector") {
+    const chartContainer = d3.select("#chart-container");
+    chartContainer.select("svg").remove();
+    int_sec_bar();
+  }
+  if(chartType == "topic"){
+    const chartContainer = d3.select("#chart-container");
+    chartContainer.select("svg").remove();
+    int_pes_bar();
+  }
+  if(chartType == "pestle"){
+    const chartContainer = d3.select("#chart-container");
+    chartContainer.select("svg").remove();
+    int_top_bar();
+  }
+}
+
+
+ const svg2 = d3.select("#chart-container-3")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: fill;");
+  
+function rel_sec_bar(){
+  const width = 928;
+  const height = 500;
+  const marginTop = 40;
+  const marginRight = 30;
+  const marginBottom = 90;
+  const marginLeft = 50;
+
+  // Declare the x (horizontal position) scale.
+  const svg = d3.select("#chart-container-3")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: fill;");
+
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(rel_sec_data, ([d]) => -d.relevance, (d) => d.sector)) // descending intensity
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+  
+  // Declare the y (vertical position) scale.
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(rel_sec_data, (d) => d.relevance)])
+      .range([height - marginBottom, marginTop]);
+
+  // Create the SVG container.
+
+  // Add a rect for each bar.
+  svg.append("g")
+      .attr("fill", "steelblue")
+    .selectAll()
+    .data(rel_sec_data)
+    .join("circle")
+      .attr("cx", (d) => x(d.sector) +x.bandwidth()/2)
+      .attr("cy", (d) => y(d.relevance))
+      //.attr("height", (d) => y(0) - y(d.intensity))
+      .attr("r", x.bandwidth()/7);
+
+  // Add the x-axis and label.
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+  svg.selectAll(".tick text")
+  .style("text-anchor", "end") // Set the text-anchor property
+  .attr("transform", "rotate(-90)") // Rotate the tick labels
+  .attr("dx", "-0.8em") // Adjust the position of the tick labels
+  .attr("dy", "0.15em");       
+
+  // Add the y-axis and label, and remove the domain line.
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).tickFormat((y) => (y).toFixed()))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ RELEVANCE"));
+}
+function rel_pes_bar(){
+  const width = 928;
+  const height = 500;
+  const marginTop = 40;
+  const marginRight = 30;
+  const marginBottom = 90;
+  const marginLeft = 50;
+
+  // Declare the x (horizontal position) scale.
+  const svg = d3.select("#chart-container-3")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: fill;");
+
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(rel_pes_data, ([d]) => -d.relevance, (d) => d.pestle)) // descending intensity
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+  
+  // Declare the y (vertical position) scale.
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(rel_pes_data, (d) => d.relevance)])
+      .range([height - marginBottom, marginTop]);
+
+  // Create the SVG container.
+
+  // Add a rect for each bar.
+  svg.append("g")
+      .attr("fill", "steelblue")
+    .selectAll()
+    .data(rel_pes_data)
+    .join("circle")
+      .attr("cx", (d) => x(d.pestle) +x.bandwidth()/2)
+      .attr("cy", (d) => y(d.relevance))
+      //.attr("height", (d) => y(0) - y(d.intensity))
+      .attr("r", x.bandwidth()/7);
+
+  // Add the x-axis and label.
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+  svg.selectAll(".tick text")
+  .style("text-anchor", "end") // Set the text-anchor property
+  .attr("transform", "rotate(-90)") // Rotate the tick labels
+  .attr("dx", "-0.8em") // Adjust the position of the tick labels
+  .attr("dy", "0.15em");       
+
+  // Add the y-axis and label, and remove the domain line.
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).tickFormat((y) => (y).toFixed()))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ RELEVANCE"));
+}
+
+function rel_top_bar(){
+  const width = 928;
+  const height = 500;
+  const marginTop = 40;
+  const marginRight = 30;
+  const marginBottom = 90;
+  const marginLeft = 50;
+
+  // Declare the x (horizontal position) scale.
+  const svg = d3.select("#chart-container-3")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: fill;");
+
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(rel_top_data, ([d]) => -d.relevance, (d) => d.topic)) // descending intensity
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+  
+  // Declare the y (vertical position) scale.
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(rel_top_data, (d) => d.relevance)])
+      .range([height - marginBottom, marginTop]);
+
+  // Create the SVG container.
+
+ 
+  svg.append("g")
+      .attr("fill", "steelblue")
+    .selectAll()
+    .data(rel_top_data)
+    .join("circle")
+      .attr("cx", (d) => x(d.topic) +x.bandwidth()/2)
+      .attr("cy", (d) => y(d.relevance))
+      .attr("r", x.bandwidth()/2);
+
+  // Add the x-axis and label.
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).tickSizeOuter(0));
+  svg.selectAll(".tick text")
+  .style("text-anchor", "end") // Set the text-anchor property
+  .attr("transform", "rotate(-90)") // Rotate the tick labels
+  .attr("dx", "-0.8em") // Adjust the position of the tick labels
+  .attr("dy", "0.15em");       
+
+  // Add the y-axis and label, and remove the domain line.
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).tickFormat((y) => (y).toFixed()))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ RELEVANCE"));
+}
+
+const svg3 = d3.select("#chart-container-2")
+  .append("svg")
+  .attr("width", svgWidth)
+  .attr("height", svgHeight);
+
+
+function createlinechart(inp){
+  var data = linear_data[inp];
+  const svgWidth = 928;
+const svgHeight = 500
+
+const svg = d3.select("#chart-container-2")
+  .append("svg")
+  .attr("width", svgWidth)
+  .attr("height", svgHeight);
+
+const margin = { top: 40, right: 30, bottom: 90, left: 40 };
+const width = svgWidth - margin.left - margin.right;
+const height = svgHeight - margin.top - margin.bottom;
+
+const g = svg.append("g")
+  .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const xScale = d3.scaleLinear()
+  .domain(d3.extent(data, d => d.start_year))
+  .range([0, width]);
+
+const yScale = d3.scaleLinear()
+  .domain([0, d3.max(data, d => d.frequency)])
+  .range([height, 0]);
+
+  const line = d3.line()
+  .x(d => xScale(d.start_year))
+  .y(d => yScale(d.frequency));
+
+  g.append("path")
+  .datum(data) // Bind data to the path element
+  .attr("class", "line")
+  .attr("d", line) // 'line' is the variable storing the line generator
+  .attr("fill", "none")
+  .attr("stroke", "steelblue")
+  .attr("stroke-width", 2);
+  
+  
+
+  const xAxis = d3.axisBottom(xScale);
+const yAxis = d3.axisLeft(yScale);
+
+g.append("g")
+  .attr("class", "x-axis")
+  .attr("transform", `translate(0,${height})`)
+  .call(xAxis);
+
+g.append("g")
+  .attr("class", "y-axis")
+  .call(yAxis);
+
+
+const xValue = d => d.start_year;
+const yValue = d => d.frequency;
+g.selectAll('circle').data(data)
+    .enter().append('circle')
+      .attr('cy', d => yScale(yValue(d)))
+      .attr('cx', d => xScale(xValue(d)))
+      .attr('r', 7)
+      .attr('fill', "steelblue");
+  
+};
+  const svg4 = d3.select("#chart-container-4")
+    .append("svg")
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
+
+function createpiechart(inp){
+  var data = pie_data[inp];
+  const svgWidth = 400;
+  const svgHeight = 400;
+  const radius = Math.min(svgWidth, svgHeight) / 2;
+
+  const svg = d3.select("#chart-container-4")
+    .append("svg")
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
+const color = d3.scaleOrdinal()
+  .range(d3.schemeCategory10);
+  const g = svg.append("g")
+    .attr("transform", `translate(${svgWidth / 2},${svgHeight / 2})`);
+  const pie = d3.pie()
+    .value(d => d.frequency);
+  const arc = d3.arc()
+    .innerRadius(0)
+    .outerRadius(radius);
+  const arcs = g.selectAll(".arc")
+  .data(pie(data))
+  .enter()
+  .append("g")
+  .attr("class", "arc");
+
+arcs.append("path")
+  .attr("d", arc)
+  .attr("fill", (d, i) => color(i)); // Use color scale for filling
+
+// Optional: Add labels
+arcs.append("text")
+  .attr("transform", d => `translate(${arc.centroid(d)})`)
+  .attr("dy", "0.35em")
+  .text(d => d.data.country)
+  .attr("font-size", "15px");
+}
+
+  
+const buttonDropdown = document.getElementById("buttonDropdown");
+const selectedButton = document.getElementById("selectedButton");
+
+        // Add an event listener to the dropdown
+buttonDropdown.addEventListener("change", () => {
+  const selectedValue = buttonDropdown.value;
+    if (selectedValue) {
+        selectedButton.textContent = selectedValue;
+        const chartContainer = d3.select("#chart-container-2");
+        chartContainer.select("svg").remove();
+        var data = selectedValue;
+        createlinechart(data);
+        selectedButton.disabled = false;
+    } else {
+        selectedButton.textContent = "Selected Button";
+        selectedButton.disabled = true;
+        }
+});
+
+const buttonDropdown2 = document.getElementById("buttonDropdown2");
+const selectedButton2 = document.getElementById("selectedButton2");
+
+        // Add an event listener to the dropdown
+buttonDropdown2.addEventListener("change", () => {
+  const selectedValue2 = buttonDropdown2.value;
+    if (selectedValue2) {
+        selectedButton2.textContent = selectedValue2;
+        const chartContainer = d3.select("#chart-container-4");
+        chartContainer.select("svg").remove();
+        var data = selectedValue2;
+        createpiechart(data);
+        selectedButton2.disabled = false;
+    } else {
+        selectedButton2.textContent = "Selected Button";
+        selectedButton2.disabled = true;
+        }
+});
+  
+
+  
+function showRelChart(chartType) {
+
+  if (chartType == "sector") {
+    const chartContainer = d3.select("#chart-container-3");
+    chartContainer.select("svg").remove();
+    rel_sec_bar();
+  }
+  if(chartType == "topic"){
+    const chartContainer = d3.select("#chart-container-3");
+    chartContainer.select("svg").remove();
+    rel_top_bar();
+  }
+  if(chartType == "pestle"){
+    const chartContainer = d3.select("#chart-container-3");
+    chartContainer.select("svg").remove();
+    rel_pes_bar();
+  }
+}
+const svg5 = d3.select("#chart-container-5")     
+      .append('svg')
+      .attr("width", svgWidth)
+      .attr("height", svgHeight)
+function hierarchial(){
+  // HIERARCHIAL GRAPH
+  const chartContainer = d3.select("#chart-container-5");
+  chartContainer.select("svg").remove();
+  const width = 928;
+  const height = 600;
+  const marginTop = 20;
+  const marginRight = 20;
+  const marginBottom = 40;
+  const marginLeft = 30;
+
+  // Create the positional scales.
+  const x = d3.scaleBand()
+      .domain(d3.groupSort(triple_data, ([d]) => -d.frequency, (d) => d.sector)) // descending intensity
+      .range([marginLeft, width - marginRight])
+      .padding(0.1);
+
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(triple_data, d => d.frequency)]).nice()
+    .range([height - marginBottom, marginTop]);
+
+  // Create the SVG container.
+    const svg = d3.select("#chart-container-5")     
+      .append('svg')
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;");
+
+  // Add the horizontal axis.
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0));
+  
+  // Add the vertical axis.
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y))
+      .call(g => g.select(".domain").remove())
+      
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ FREQUENCY"));
+
+
+  // Compute the points in pixel space as [x, y, z], where z is the name of the series.
+  const points = triple_data.map((d) => [x(d.sector), y(d.frequency), d.country]);
+
+
+  // Group the points by series.
+  const groups = d3.rollup(points, v => Object.assign(v, {z: v[0][2]}), d => d[2]);
+const lineGenerator = d3.line()
+  .x(d => d[0])
+  .y(d => d[1]);
+  
+  const path = svg.append("g")
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-linecap", "round")
+    .selectAll("path")
+    .data(groups.values())
+    .join("path")
+      .style("mix-blend-mode", "multiply")
+      .attr("d", d=>lineGenerator(d.sort((a, b) => a[0] - b[0])));
+
+  // Add an invisible layer for the interactive tip.
+  const dot = svg.append("g")
+      .attr("display", "none");
+
+  dot.append("circle")
+      .attr("r", 2.5);
+
+  dot.append("text")
+      .attr("text-anchor", "middle")
+      .attr("y", -8);
+
+  svg
+      .on("pointerenter", pointerentered)
+      .on("pointermove", pointermoved)
+      .on("pointerleave", pointerleft)
+      .on("touchstart", event => event.preventDefault());
+  
+  function pointermoved(event) {
+    const [xm, ym] = d3.pointer(event);
+    const i = d3.leastIndex(points, ([x, y]) => Math.hypot(x - xm, y - ym));
+    const [x, y, k] = points[i];
+    path.style("stroke", ({z}) => z === k ? null : "#ddd").filter(({z}) => z === k).raise();
+    dot.attr("transform", `translate(${x},${y})`);
+    dot.select("text").text(k);
+    svg.property("value", triple_data[i]).dispatch("input", {bubbles: true});
+  }
+
+  function pointerentered() {
+    path.style("mix-blend-mode", null).style("stroke", "#ddd");
+    dot.attr("display", null);
+  }
+
+  function pointerleft() {
+    path.style("mix-blend-mode", "multiply").style("stroke", null);
+    dot.attr("display", "none");
+    svg.node().value = null;
+    svg.dispatch("input", {bubbles: true});
+  }
+
+}
+  
+</script>
+
+</html>
