@@ -5,7 +5,7 @@ import json
 import csv
 import pandas as pd
 
-db_connection_string = "mysql+pymysql://7e8ex03z9e7w6i2vello:pscale_pw_BHzsATGo0hD5fgiDlLiFy4aCF2fyFH23ox5IpIp5u9r@aws.connect.psdb.cloud/dashboard?charset=utf8mb4"
+db_connection_string = [connection string here]
 
 engine = create_engine(db_connection_string,
                        connect_args={"ssl": {
